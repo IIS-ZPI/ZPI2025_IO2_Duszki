@@ -19,7 +19,7 @@ class ArithmeticDiv(IArithmeticsDiv):
         if B == 0:
             raise ValueError("Division by zero")
         return A / B
-      
+#Lab1_Task5_3_ninsson
 class IArithmeticsAdd(ABC):
     @abstractmethod
     def addition(self, A: float, B: float) -> float:
@@ -33,7 +33,7 @@ class IArithmeticsMult(ABC):
     @abstractmethod
     def multiplication(self, A: float, B: float) -> float:
         pass
-
+#Lab1_Task5_2_ninsson
 class ArithmeticMult(IArithmeticsMult):
     def multiplication(self, A: float, B: float) -> float:
         return A * B
