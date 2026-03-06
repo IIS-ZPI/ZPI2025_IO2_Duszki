@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+#Lab1_Task5_Marc311o_1
 
 class IArithmeticsPow(ABC):
     @abstractmethod
