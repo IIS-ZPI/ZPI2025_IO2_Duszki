@@ -46,3 +46,19 @@ class IArithmeticsDiff(ABC):
 class ArithmeticDiff(IArithmeticsDiff):
     def difference(self, A: float, B: float) -> float:
         return A - B
+
+if __name__ == "__main__":
+    add = ArithmeticAdd()
+    diff = ArithmeticDiff()
+    mult = ArithmeticMult()
+    div = ArithmeticDiv()
+    pow_op = ArithmeticPow()
+
+    a = 10
+    b = 5
+
+    print("Addition:", add.addition(a, b))
+    print("Difference:", diff.difference(a, b))
+    print("Multiplication:", mult.multiplication(a, b))
+    print("Division:", div.division(a, b))
+    print("Power:", pow_op.power(a, b))
