@@ -53,7 +53,7 @@ if __name__ == "__main__":
     mult = ArithmeticMult()
     div = ArithmeticDiv()
     pow_op = ArithmeticPow()
-
+    # Lab1_Task6_Marc311o
     a = 10
     b = 5
 
