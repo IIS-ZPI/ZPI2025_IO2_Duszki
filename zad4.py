@@ -4,11 +4,11 @@ class IArithmeticsPow(ABC):
     @abstractmethod
     def power(self, A: float, B: float) -> float:
         pass
-      
+
 class ArithmeticPow(IArithmeticsPow):
     def power(self, A: float, B: float) -> float:
         return A ** B
-      
+
 class IArithmeticsDiv(ABC):
     @abstractmethod
     def division(self, A: float, B: float) -> float:
@@ -19,7 +19,7 @@ class ArithmeticDiv(IArithmeticsDiv):
         if B == 0:
             raise ValueError("Division by zero")
         return A / B
-      
+
 class IArithmeticsAdd(ABC):
     @abstractmethod
     def addition(self, A: float, B: float) -> float:
@@ -28,7 +28,7 @@ class IArithmeticsAdd(ABC):
 class ArithmeticAdd(IArithmeticsAdd):
     def addition(self, A: float, B: float) -> float:
         return A + B
-      
+
 class IArithmeticsMult(ABC):
     @abstractmethod
     def multiplication(self, A: float, B: float) -> float:
@@ -37,7 +37,7 @@ class IArithmeticsMult(ABC):
 class ArithmeticMult(IArithmeticsMult):
     def multiplication(self, A: float, B: float) -> float:
         return A * B
-    
+
 class IArithmeticsDiff(ABC):
     @abstractmethod
     def difference(self, A: float, B: float) -> float:
