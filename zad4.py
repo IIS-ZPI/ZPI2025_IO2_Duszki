@@ -46,7 +46,7 @@ class IArithmeticsDiff(ABC):
 class ArithmeticDiff(IArithmeticsDiff):
     def difference(self, A: float, B: float) -> float:
         return A - B
-
+#Lab1_Task5_1_ninsson
 if __name__ == "__main__":
     add = ArithmeticAdd()
     diff = ArithmeticDiff()
