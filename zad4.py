@@ -61,4 +61,5 @@ if __name__ == "__main__":
     print("Difference:", diff.difference(a, b))
     print("Multiplication:", mult.multiplication(a, b))
     print("Division:", div.division(a, b))
+    # Lab1_Task5_WojciechKorbel_3
     print("Power:", pow_op.power(a, b))
