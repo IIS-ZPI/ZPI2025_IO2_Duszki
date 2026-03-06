@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-# Lab1_Task6_WojciechKorbel
 class IArithmeticsPow(ABC):
     @abstractmethod
     def power(self, A: float, B: float) -> float:
