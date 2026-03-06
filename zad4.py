@@ -34,7 +34,7 @@ class IArithmeticsMult(ABC):
     @abstractmethod
     def multiplication(self, A: float, B: float) -> float:
         pass
-
+#Lab1_Task5_Marc311o_2
 class ArithmeticMult(IArithmeticsMult):
     def multiplication(self, A: float, B: float) -> float:
         return A * B
@@ -63,3 +63,4 @@ if __name__ == "__main__":
     print("Multiplication:", mult.multiplication(a, b))
     print("Division:", div.division(a, b))
     print("Power:", pow_op.power(a, b))
+    # Lab1_Task5_Marc311o_3
