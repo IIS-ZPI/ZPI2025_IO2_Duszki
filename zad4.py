@@ -43,7 +43,7 @@ class IArithmeticsDiff(ABC): #Lab1_Task5_ziomciopoziomcio_3
     def difference(self, A: float, B: float) -> float:
         pass
 
-class ArithmeticDiff(IArithmeticsDiff):
+class ArithmeticDiff(IArithmeticsDiff): #Lab1_Task6_ziomciopoziomcio
     def difference(self, A: float, B: float) -> float:
         return A - B
 
