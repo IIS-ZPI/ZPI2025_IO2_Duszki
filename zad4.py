@@ -48,6 +48,7 @@ class ArithmeticDiff(IArithmeticsDiff):
         return A - B
 
 if __name__ == "__main__":
+    # Lab1_Task5_WojciechKorbel_1
     add = ArithmeticAdd()
     diff = ArithmeticDiff()
     mult = ArithmeticMult()
