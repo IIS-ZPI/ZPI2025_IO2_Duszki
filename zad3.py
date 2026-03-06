@@ -1,2 +1,2 @@
 print("KBanaszewskaa\n")
-print("zimociopoziomcio\n")
+print("ziomciopoziomcio\n")
