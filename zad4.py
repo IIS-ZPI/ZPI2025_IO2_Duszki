@@ -4,7 +4,9 @@ class IArithmeticsPow(ABC):
     @abstractmethod
     def power(self, A: float, B: float) -> float:
         pass
-      
+
+#Lab1_Task5_KBanaszewskaa_3
+
 class ArithmeticPow(IArithmeticsPow):
     def power(self, A: float, B: float) -> float:
         return A ** B
