@@ -33,7 +33,7 @@ class IArithmeticsMult(ABC):
     @abstractmethod
     def multiplication(self, A: float, B: float) -> float:
         pass
-
+#Lab1_Task5_Marc311o_2
 class ArithmeticMult(IArithmeticsMult):
     def multiplication(self, A: float, B: float) -> float:
         return A * B
