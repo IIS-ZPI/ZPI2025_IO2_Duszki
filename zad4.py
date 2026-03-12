@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+#Lab1_Task5_Marc311o_1
 
 class IArithmeticsPow(ABC):
     @abstractmethod
@@ -35,6 +36,7 @@ class IArithmeticsMult(ABC):
     @abstractmethod
     def multiplication(self, A: float, B: float) -> float:
         pass
+#Lab1_Task5_Marc311o_2
 #Lab1_Task5_2_ninsson
 class ArithmeticMult(IArithmeticsMult):
     def multiplication(self, A: float, B: float) -> float:
@@ -64,3 +66,4 @@ if __name__ == "__main__":
     print("Multiplication:", mult.multiplication(a, b))
     print("Division:", div.division(a, b))
     print("Power:", pow_op.power(a, b))
+    # Lab1_Task5_Marc311o_3
