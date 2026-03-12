@@ -52,12 +52,13 @@ class ArithmeticDiff(IArithmeticsDiff):
         return A - B
 #Lab1_Task5_1_ninsson
 if __name__ == "__main__":
+    # Lab1_Task5_WojciechKorbel_1
     add = ArithmeticAdd()
     diff = ArithmeticDiff()
     mult = ArithmeticMult()
     div = ArithmeticDiv()
     pow_op = ArithmeticPow()
-
+    # Lab1_Task5_WojciechKorbel_2
     a = 10
     b = 5
 
@@ -65,5 +66,6 @@ if __name__ == "__main__":
     print("Difference:", diff.difference(a, b))
     print("Multiplication:", mult.multiplication(a, b))
     print("Division:", div.division(a, b))
+    # Lab1_Task5_WojciechKorbel_3
     print("Power:", pow_op.power(a, b))
     # Lab1_Task5_Marc311o_3
