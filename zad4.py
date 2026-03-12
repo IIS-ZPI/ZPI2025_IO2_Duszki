@@ -40,7 +40,7 @@ class ArithmeticMult(IArithmeticsMult):
     def multiplication(self, A: float, B: float) -> float:
         return A * B
     
-class IArithmeticsDiff(ABC):
+class IArithmeticsDiff(ABC): #Lab1_Task5_ziomciopoziomcio_3
     @abstractmethod
     def difference(self, A: float, B: float) -> float:
         pass
