@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
+#Lab1_Task5_Marc311o_1
 
 class IArithmeticsPow(ABC):
     @abstractmethod
     def power(self, A: float, B: float) -> float:
         pass
-      
+
+#Lab1_Task5_KBanaszewskaa_3
+
 class ArithmeticPow(IArithmeticsPow):
     def power(self, A: float, B: float) -> float:
         return A ** B
@@ -19,7 +22,7 @@ class ArithmeticDiv(IArithmeticsDiv):
         if B == 0:
             raise ValueError("Division by zero")
         return A / B
-      
+#Lab1_Task5_3_ninsson
 class IArithmeticsAdd(ABC):
     @abstractmethod
     def addition(self, A: float, B: float) -> float:
@@ -33,12 +36,13 @@ class IArithmeticsMult(ABC):
     @abstractmethod
     def multiplication(self, A: float, B: float) -> float:
         pass
-
+#Lab1_Task5_Marc311o_2
+#Lab1_Task5_2_ninsson
 class ArithmeticMult(IArithmeticsMult):
     def multiplication(self, A: float, B: float) -> float:
         return A * B
     
-class IArithmeticsDiff(ABC):
+class IArithmeticsDiff(ABC): #Lab1_Task5_ziomciopoziomcio_3
     @abstractmethod
     def difference(self, A: float, B: float) -> float:
         pass
@@ -46,7 +50,7 @@ class IArithmeticsDiff(ABC):
 class ArithmeticDiff(IArithmeticsDiff):
     def difference(self, A: float, B: float) -> float:
         return A - B
-
+#Lab1_Task5_1_ninsson
 if __name__ == "__main__":
     # Lab1_Task5_WojciechKorbel_1
     add = ArithmeticAdd()
@@ -64,3 +68,4 @@ if __name__ == "__main__":
     print("Division:", div.division(a, b))
     # Lab1_Task5_WojciechKorbel_3
     print("Power:", pow_op.power(a, b))
+    # Lab1_Task5_Marc311o_3
