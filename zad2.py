@@ -1,1 +1,0 @@
-print("ZPI2025_IO2_Duszki\nDeveloper - KBanaszewskaa\n")
