@@ -1,0 +1,29 @@
+name: CAS Frontend CI
+
+on:
+  push:
+    branches: [ "main", "develop", "release" ]
+  pull_request:
+    branches: [ "main", "develop", "release" ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repo code checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Dependencies installation
+        run: npm install
+
+      - name: Tests execution
+
+        run: npm test -- --passWithNoTests
