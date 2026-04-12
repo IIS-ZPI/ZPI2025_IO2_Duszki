@@ -8,7 +8,14 @@ const handleResponse = async (response: Response) => {
     if (response.status === 404) {
         return null;
     }
-    throw new Error(`NBP API response: ${response.statusText}`);
+
+    const errorBody = (await response.text()).trim();
+    const statusText = response.statusText ? ` ${response.statusText}` : '';
+    const bodyText = errorBody ? ` - ${errorBody}` : '';
+
+    throw new Error(
+      `NBP API response: ${response.status}${statusText} (${response.url})${bodyText}`
+    );
   }
   return response.json();
 };
