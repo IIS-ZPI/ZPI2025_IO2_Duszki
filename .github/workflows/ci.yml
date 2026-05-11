@@ -22,7 +22,9 @@ jobs:
           cache: 'npm'
 
       - name: Dependencies installation
+        working-directory: frontend
         run: npm ci
 
       - name: Tests execution
-        run: npm run test
+        working-directory: frontend
+        run: npx vitest run
