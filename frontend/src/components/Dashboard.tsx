@@ -28,7 +28,7 @@ const getDateRange = (timeframe: string) => {
   return { startDate: formatDate(start), endDate: formatDate(end) };
 };
 
-// Function: Calculating histogram data for a currency pair
+// Function: Calculating DYNAMIC histogram data for ANY currency pair
 const generateHistogramData = (data1: NBPExchangeRates | null, data2: NBPExchangeRates | null) => {
   if (!data1 || !data2 || data1.rates.length === 0 || data2.rates.length === 0) return [];
 
@@ -39,7 +39,7 @@ const generateHistogramData = (data1: NBPExchangeRates | null, data2: NBPExchang
   const changes: number[] = [];
   let prevPairRate: number | null = null;
 
-  // Calculating pair rate (e.g., EUR / USD) and day-to-day difference
+  // Calculating pair rate and day-to-day difference
   for (let i = 0; i < data1.rates.length; i++) {
     const date = data1.rates[i].effectiveDate;
     const rate1 = data1.rates[i].mid;
@@ -54,43 +54,49 @@ const generateHistogramData = (data1: NBPExchangeRates | null, data2: NBPExchang
     }
   }
 
-  // Definition of bins (ranges)
-  const bins = [
-    { min: -Infinity, max: -0.0136, count: 0, label: '< -0.0136' },
-    { min: -0.0136, max: -0.0116, count: 0, label: '-0.0136' },
-    { min: -0.0116, max: -0.0097, count: 0, label: '-0.0116' },
-    { min: -0.0097, max: -0.0077, count: 0, label: '-0.0097' },
-    { min: -0.0077, max: -0.0058, count: 0, label: '-0.0077' },
-    { min: -0.0058, max: -0.0039, count: 0, label: '-0.0058' },
-    { min: -0.0039, max: -0.0019, count: 0, label: '-0.0039' },
-    { min: -0.0019, max: 0, count: 0, label: '-0.0019' },
-    { min: 0, max: 0.0019, count: 0, label: '0' },
-    { min: 0.0019, max: 0.0039, count: 0, label: '0.0019' },
-    { min: 0.0039, max: 0.0058, count: 0, label: '0.0039' },
-    { min: 0.0058, max: 0.0077, count: 0, label: '0.0058' },
-    { min: 0.0077, max: 0.0097, count: 0, label: '0.0077' },
-    { min: 0.0097, max: 0.0116, count: 0, label: '0.0097' },
-    { min: 0.0116, max: 0.0136, count: 0, label: '0.0116' },
-    { min: 0.0136, max: Infinity, count: 0, label: '> 0.0136' }
-  ];
+  if (changes.length === 0) return [];
 
-  // Grouping calculated changes into bins
+  // --- DYNAMIC BINNING ALGORITHM ---
+  const minChange = Math.min(...changes);
+  const maxChange = Math.max(...changes);
+
+  // Fallback if all changes are exactly the same (0 volatility)
+  if (minChange === maxChange) {
+    return [{
+      min: minChange.toFixed(4),
+      max: maxChange.toFixed(4),
+      label: minChange.toFixed(4),
+      uv: changes.length
+    }];
+  }
+
+  const numBins = 12; // 12 bins look clean and readable on a standard chart
+  const step = (maxChange - minChange) / numBins;
+
+  // Initialize empty bins
+  const bins = Array.from({ length: numBins }, (_, i) => ({
+    min: minChange + i * step,
+    max: minChange + (i + 1) * step,
+    count: 0
+  }));
+
+  // Assign changes to their respective bins
   changes.forEach(change => {
-    for (let bin of bins) {
-      if (change >= bin.min && change < bin.max) {
-        bin.count++;
-        break;
-      }
-    }
+    let binIndex = Math.floor((change - minChange) / step);
+    // Boundary safety for the absolute max value
+    if (binIndex >= numBins) binIndex = numBins - 1;
+    if (binIndex < 0) binIndex = 0;
+
+    bins[binIndex].count++;
   });
 
-  // Returning filtered bins
+  // Format data for Recharts and the Table
   return bins.map(bin => ({
-    min: bin.min === -Infinity ? '< -0.0136' : bin.min.toString(),
-    max: bin.max === Infinity ? '> 0.0136' : bin.max.toString(),
-    label: bin.label,
+    min: bin.min.toFixed(4),
+    max: bin.max.toFixed(4),
+    label: bin.min.toFixed(4), // X-axis label
     uv: bin.count
-  })).filter(b => b.min !== '< -0.0136' && b.max !== '> 0.0136' || b.uv > 0);
+  }));
 };
 
 export const Dashboard = () => {
@@ -156,7 +162,7 @@ export const Dashboard = () => {
     loadBottomData();
   }, [distributionMode, startDate, currency1, currency2]);
 
-  // Calculating real histogram data using useMemo (now using bottomData)
+  // Calculating real histogram data using useMemo (now dynamic!)
   const histogramData = useMemo(() => generateHistogramData(bottomData1, bottomData2), [bottomData1, bottomData2]);
 
   // Function to export table to CSV
