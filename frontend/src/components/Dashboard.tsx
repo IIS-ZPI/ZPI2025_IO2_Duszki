@@ -311,7 +311,7 @@ export const Dashboard = () => {
                 )}
               </div>
 
-              {/* SAVE button below the chart */}
+              {/* SAVE button below the chart with LARGER SVG icon and text */}
               <div className="flex justify-end mt-2">
                 <button
                   onClick={handleSavePNG}
@@ -388,6 +388,27 @@ const CurrencyColumn = ({ selectedCurrency, onCurrencyChange, data }: any) => {
   const rawStats = data ? calculateStats(data.rates) : null;
   const stats = rawStats ?? defaultStats;
 
+  const IconUpward = (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" strokeWidth={1.5} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 15L15 9m0 0v4m0-4h-4" />
+    </svg>
+  );
+
+  const IconEquals = (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" strokeWidth={1.5} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 10h6m-6 4h6" />
+    </svg>
+  );
+
+  const IconDownward = (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" strokeWidth={1.5} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 9l6 6m0 0v-4m0 4h-4" />
+    </svg>
+  );
+
   return (
     <div className="space-y-4">
       {/* Large Currency Selector */}
@@ -408,9 +429,9 @@ const CurrencyColumn = ({ selectedCurrency, onCurrencyChange, data }: any) => {
 
       {/* 3 tiles - sessions */}
       <div className="grid grid-cols-3 gap-4">
-         <StatBox title="Upward sessions" value={sessions.upward} valueColor="text-[#217d4e]" icon="↗" />
-         <StatBox title="No-change sessions" value={sessions.noChange} valueColor="text-yellow-500" icon="=" />
-         <StatBox title="Downward sessions" value={sessions.downward} valueColor="text-red-600" icon="↘" />
+         <StatBox title="Upward sessions" value={sessions.upward} valueColor="text-[#217d4e]" icon={IconUpward} />
+         <StatBox title="No-change sessions" value={sessions.noChange} valueColor="text-yellow-500" icon={IconEquals} />
+         <StatBox title="Downward sessions" value={sessions.downward} valueColor="text-red-600" icon={IconDownward} />
       </div>
 
       {/* 2 tiles - Median and Mode */}
@@ -431,8 +452,8 @@ const CurrencyColumn = ({ selectedCurrency, onCurrencyChange, data }: any) => {
 // --- HELPER TILE COMPONENT --- //
 const StatBox = ({ title, value, valueColor = "text-gray-900", icon }: any) => (
   <div className="bg-white border border-gray-200 p-4 rounded-lg shadow-sm flex flex-col items-center justify-center relative">
-    {icon && <span className="absolute top-2 right-2 text-gray-300 text-xs">{icon}</span>}
-    <span className="text-[10px] uppercase text-gray-500 mb-1 tracking-wider text-center">{title}</span>
-    <span className={`text-xl md:text-2xl font-bold ${valueColor}`}>{value}</span>
+    {icon && <div className="absolute top-3 right-3 text-gray-300">{icon}</div>}
+    <span className="text-[10px] uppercase text-gray-500 mb-1 tracking-wider text-center z-10">{title}</span>
+    <span className={`text-xl md:text-2xl font-bold ${valueColor} z-10`}>{value}</span>
   </div>
 );
