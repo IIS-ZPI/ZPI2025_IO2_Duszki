@@ -162,7 +162,7 @@ export const Dashboard = () => {
     loadBottomData();
   }, [distributionMode, startDate, currency1, currency2]);
 
-  // Calculating real histogram data using useMemo (now dynamic!)
+  // Calculating real histogram data using useMemo
   const histogramData = useMemo(() => generateHistogramData(bottomData1, bottomData2), [bottomData1, bottomData2]);
 
   // Function to export table to CSV
@@ -262,7 +262,7 @@ export const Dashboard = () => {
             </div>
 
             <div className="flex flex-wrap gap-4 items-end">
-               {/* Month / Quarter toggle (No longer changes topTimeframe) */}
+               {/* Month / Quarter toggle */}
                <div className="flex border border-gray-200 rounded-md overflow-hidden bg-white h-[34px]">
                   <button
                     onClick={() => { setDistributionMode('Month'); setStartDate(''); }}
@@ -278,19 +278,15 @@ export const Dashboard = () => {
                   </button>
                </div>
 
-               {/* Start date selection with label above */}
+               {/* Clean Native Date Picker with Label */}
                <div className="flex flex-col">
                   <span className="text-[10px] uppercase text-gray-500 mb-1 ml-1 tracking-wider">Start date</span>
-                  <div className="border border-gray-200 rounded-md px-3 py-1.5 flex items-center bg-white h-[34px]">
-                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <div className="border border-gray-200 rounded-md px-2 py-1.5 flex items-center bg-white h-[34px]">
                      <input
-                       type={startDate ? "date" : "text"}
-                       placeholder="Start date"
-                       onFocus={(e) => e.target.type = 'date'}
-                       onBlur={(e) => { if (!startDate) e.target.type = 'text'; }}
+                       type="date"
                        value={startDate}
                        onChange={(e) => setStartDate(e.target.value)}
-                       className="text-sm text-gray-600 bg-transparent outline-none cursor-pointer placeholder-gray-400"
+                       className="text-sm text-gray-600 bg-transparent outline-none cursor-pointer w-full px-1"
                      />
                   </div>
                </div>
