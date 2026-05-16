@@ -174,20 +174,20 @@ export const Dashboard = () => {
             </div>
 
             <div className="w-full xl:w-1/3">
-               <div className="border border-gray-200 rounded-lg p-4 max-h-[350px] overflow-y-auto">
+               <div className="border border-gray-200 rounded-lg overflow-y-auto max-h-[350px] bg-white relative">
                  <table className="w-full text-sm text-center">
-                   <thead className="sticky top-0 bg-white">
-                     <tr className="border-b">
-                       <th className="pb-3 font-semibold text-gray-700" colSpan={2}>Range</th>
-                       <th className="pb-3 font-semibold text-gray-700">Changes</th>
+                   <thead className="sticky top-0 bg-white z-10 shadow-sm">
+                     <tr className="border-b border-gray-200">
+                       <th className="py-3 px-2 font-semibold text-gray-700" colSpan={2}>Range</th>
+                       <th className="py-3 px-2 font-semibold text-gray-700">Changes</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-gray-100">
                       {histogramData.map((row, idx) => (
-                        <tr key={idx}>
-                          <td className="py-2 text-gray-600">{row.min}</td>
-                          <td className="py-2 text-gray-600">{row.max}</td>
-                          <td className="py-2 text-gray-800 font-medium">{row.uv}</td>
+                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                          <td className="py-2.5 px-2 text-gray-600">{row.min}</td>
+                          <td className="py-2.5 px-2 text-gray-600">{row.max}</td>
+                          <td className="py-2.5 px-2 text-gray-800 font-medium">{row.uv}</td>
                         </tr>
                       ))}
                    </tbody>
