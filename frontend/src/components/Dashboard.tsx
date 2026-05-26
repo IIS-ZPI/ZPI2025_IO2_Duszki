@@ -19,17 +19,33 @@ export const Dashboard = () => {
   const [topData2, setTopData2] = useState<NBPExchangeRates | null>(null);
 
   // --- BOTTOM SECTION STATES (Histogram & Table) ---
-  const [distributionMode, setDistributionMode] = useState<'Month' | 'Quarter'>('Quarter');
+  const [distributionMode, setDistributionMode] = useState<'Month' | 'Quarter'>('Month');
   const [startDate, setStartDate] = useState<string>('');
   const [bottomData1, setBottomData1] = useState<NBPExchangeRates | null>(null);
   const [bottomData2, setBottomData2] = useState<NBPExchangeRates | null>(null);
 
   const chartRef = useRef<HTMLDivElement>(null);
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Validation logic
+  const areCurrenciesSame = currency1 === currency2;
+
+  const isFutureEndPeriod = useMemo(() => {
+    if (!startDate) return false;
+    const start = new Date(startDate);
+    const daysToAdd = distributionMode === 'Month' ? 30 : 90;
+    start.setDate(start.getDate() + daysToAdd);
+    return start > new Date();
+  }, [startDate, distributionMode]);
+
+  const hasBottomError = areCurrenciesSame || isFutureEndPeriod;
+
   // Fetching data specifically for the TOP section
   useEffect(() => {
+    if (!topTimeframe) return;
     const loadTopData = async () => {
-      const { startDate: start, endDate } = getDateRange(topTimeframe || '1m');
+      const { startDate: start, endDate } = getDateRange(topTimeframe);
 
       try {
         const [res1, res2] = await Promise.all([
@@ -47,6 +63,12 @@ export const Dashboard = () => {
 
   // Fetching data specifically for the BOTTOM section
   useEffect(() => {
+    if (hasBottomError) {
+      setBottomData1(null);
+      setBottomData2(null);
+      return;
+    }
+
     const loadBottomData = async () => {
       const bottomTimeframe = distributionMode === 'Month' ? '1m' : '1q';
       const { startDate: calcStart, endDate } = getDateRange(bottomTimeframe);
@@ -64,19 +86,19 @@ export const Dashboard = () => {
       }
     };
     loadBottomData();
-  }, [distributionMode, startDate, currency1, currency2]);
+  }, [distributionMode, startDate, currency1, currency2, hasBottomError]);
 
   const histogramData = useMemo(() => generateHistogramData(bottomData1, bottomData2), [bottomData1, bottomData2]);
 
   const handleSaveCSV = () => {
-    let csvContent = "data:text/csv;charset=utf-8,Range Min,Range Max,Changes\n";
+    let csvContent = "data:text/csv;charset=utf-8,Start of range (inclusive),End of range (exclusive),Number of changes\n";
     histogramData.forEach(row => {
       csvContent += `${row.min},${row.max},${row.uv}\n`;
     });
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${distributionMode.toLowerCase()}_distribution_${currency1}_${currency2}.csv`);
+    link.setAttribute("download", `${distributionMode.toLowerCase()}ly_distribution_${currency1}_${currency2}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -87,7 +109,7 @@ export const Dashboard = () => {
       try {
         const dataUrl = await htmlToImage.toPng(chartRef.current, { backgroundColor: '#ffffff' });
         const link = document.createElement('a');
-        link.download = `${distributionMode.toLowerCase()}_chart_${currency1}_${currency2}.png`;
+        link.download = `${distributionMode.toLowerCase()}ly_chart_${currency1}_${currency2}.png`;
         link.href = dataUrl;
         link.click();
       } catch (error) {
@@ -133,8 +155,8 @@ export const Dashboard = () => {
         <section className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
             <div>
-              <h3 className="text-lg font-bold text-gray-800">{distributionMode}ly changes distribution {currency1} - {currency2}</h3>
-              <p className="text-sm text-gray-500">Frequency histogram of value changes within a given timeframe</p>
+              <h3 className="text-lg font-bold text-gray-800">{distributionMode === 'Month' ? 'Monthly change distribution' : 'Quarterly change distribution'} {currency1} - {currency2}</h3>
+              <p className="text-sm text-gray-500">Histogram of the frequency of value changes within a given range</p>
             </div>
             <div className="flex flex-wrap gap-4 items-end">
                <div className="flex border border-gray-200 rounded-md overflow-hidden bg-white h-[34px]">
@@ -144,7 +166,7 @@ export const Dashboard = () => {
                <div className="flex flex-col">
                   <span className="text-[10px] uppercase text-gray-500 mb-1 ml-1 tracking-wider">Start date</span>
                   <div className="border border-gray-200 rounded-md px-2 py-1.5 flex items-center bg-white h-[34px]">
-                     <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="text-sm text-gray-600 bg-transparent outline-none cursor-pointer w-full px-1" />
+                     <input type="date" value={startDate} max={todayStr} onChange={(e) => setStartDate(e.target.value)} className="text-sm text-gray-600 bg-transparent outline-none cursor-pointer w-full px-1" />
                   </div>
                </div>
             </div>
@@ -153,7 +175,11 @@ export const Dashboard = () => {
           <div className="flex flex-col xl:flex-row gap-8">
             <div className="flex-1">
               <div ref={chartRef} className="h-80 w-full bg-white pt-4">
-                {histogramData.length > 0 ? (
+                {areCurrenciesSame ? (
+                   <div className="flex items-center justify-center h-full text-red-500 font-medium text-center px-4">Error: Two identical currencies selected. Calculations cannot be performed.</div>
+                ) : isFutureEndPeriod ? (
+                   <div className="flex items-center justify-center h-full text-red-500 font-medium text-center px-4">Error: Selected period extends into the future. Calculations cannot be performed.</div>
+                ) : histogramData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={histogramData}>
                       <XAxis dataKey="label" fontSize={12} angle={-45} textAnchor="end" height={60} interval={0} />
@@ -167,34 +193,40 @@ export const Dashboard = () => {
                 )}
               </div>
               <div className="flex justify-end mt-2">
-                <button onClick={handleSavePNG} className="text-sm font-bold text-gray-500 hover:text-gray-800 inline-flex items-center gap-1.5 transition-colors pr-1" disabled={histogramData.length === 0}>
+                <button onClick={handleSavePNG} className="text-sm font-bold text-gray-500 hover:text-gray-800 inline-flex items-center gap-1.5 transition-colors pr-1" disabled={histogramData.length === 0 || hasBottomError}>
                   Save <svg className="w-5 h-5 text-[#357850] ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-3 3m0 0l-3-3m3 3V4" /></svg>
                 </button>
               </div>
             </div>
 
-            <div className="w-full xl:w-1/3">
-               <div className="border border-gray-200 rounded-lg overflow-y-auto max-h-[350px] bg-white relative">
+            <div className="w-full xl:w-auto overflow-x-auto">
+               <div className="border border-gray-200 rounded-lg overflow-y-auto max-h-[350px] bg-white relative min-w-[500px]">
                  <table className="w-full text-sm text-center">
                    <thead className="sticky top-0 bg-white z-10 shadow-sm">
                      <tr className="border-b border-gray-200">
-                       <th className="py-3 px-2 font-semibold text-gray-700" colSpan={2}>Range</th>
-                       <th className="py-3 px-2 font-semibold text-gray-700">Changes</th>
+                       <th className="py-3 px-4 font-semibold text-gray-700">Start of range (inclusive)</th>
+                       <th className="py-3 px-4 font-semibold text-gray-700">End of range (exclusive)</th>
+                       <th className="py-3 px-4 font-semibold text-gray-700">Number of changes</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-gray-100">
-                      {histogramData.map((row, idx) => (
+                      {!hasBottomError && histogramData.map((row, idx) => (
                         <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                          <td className="py-2.5 px-2 text-gray-600">{row.min}</td>
-                          <td className="py-2.5 px-2 text-gray-600">{row.max}</td>
-                          <td className="py-2.5 px-2 text-gray-800 font-medium">{row.uv}</td>
+                          <td className="py-2.5 px-4 text-gray-600">{row.min}</td>
+                          <td className="py-2.5 px-4 text-gray-600">{row.max}</td>
+                          <td className="py-2.5 px-4 text-gray-800 font-medium">{row.uv}</td>
                         </tr>
                       ))}
+                      {hasBottomError && (
+                         <tr>
+                           <td colSpan={3} className="py-8 text-gray-400">- No data to display -</td>
+                         </tr>
+                      )}
                    </tbody>
                  </table>
                </div>
                <div className="flex justify-end mt-3">
-                <button onClick={handleSaveCSV} className="text-sm font-bold text-gray-500 hover:text-gray-800 inline-flex items-center gap-1.5 transition-colors pr-1" disabled={histogramData.length === 0}>
+                <button onClick={handleSaveCSV} className="text-sm font-bold text-gray-500 hover:text-gray-800 inline-flex items-center gap-1.5 transition-colors pr-1" disabled={histogramData.length === 0 || hasBottomError}>
                   Save <svg className="w-5 h-5 text-[#357850] ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-3 3m0 0l-3-3m3 3V4" /></svg>
                 </button>
               </div>

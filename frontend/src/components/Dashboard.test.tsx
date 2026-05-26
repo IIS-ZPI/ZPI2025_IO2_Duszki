@@ -33,42 +33,42 @@ describe('Dashboard Component', () => {
     render(<Dashboard />);
 
     await waitFor(() => {
-      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(4);
+      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(2);
     });
 
     expect(screen.getByAltText('CAS Logo')).toBeInTheDocument();
-    expect(screen.getByText('Choose timeframe')).toBeInTheDocument();
-    expect(screen.getByText(/Quarterly changes distribution/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Choose timeframe')).toBeInTheDocument();
+    expect(screen.getByText(/Monthly change distribution/i)).toBeInTheDocument();
   });
 
   it('toggles distribution mode between Month and Quarter', async () => {
     render(<Dashboard />);
 
     await waitFor(() => {
-      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(4);
+      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(2);
     });
 
     const monthButton = screen.getByText('Month');
     const quarterButton = screen.getByText('Quarter');
 
+    fireEvent.click(quarterButton);
+    await waitFor(() => {
+      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(4);
+    });
+    expect(screen.getByText(/Quarterly change distribution/i)).toBeInTheDocument();
+
     fireEvent.click(monthButton);
     await waitFor(() => {
       expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(6);
     });
-    expect(screen.getByText(/Monthly changes distribution/i)).toBeInTheDocument();
-
-    fireEvent.click(quarterButton);
-    await waitFor(() => {
-      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(8);
-    });
-    expect(screen.getByText(/Quarterly changes distribution/i)).toBeInTheDocument();
+    expect(screen.getByText(/Monthly change distribution/i)).toBeInTheDocument();
   });
 
   it('calls fetchRatesByDateRange when timeframe is changed', async () => {
     render(<Dashboard />);
 
     await waitFor(() => {
-      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(4);
+      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(2);
     });
 
     vi.clearAllMocks();

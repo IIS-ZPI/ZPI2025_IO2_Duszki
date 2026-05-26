@@ -1,84 +1,97 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { Dashboard } from './Dashboard';
-import * as api from '../api/api';
+import { CurrencyColumn } from './CurrencyColumn';
 
-vi.mock('../api/api');
+describe('CurrencyColumn Component', () => {
+  const mockOnCurrencyChange = vi.fn();
 
-vi.mock('recharts', async () => {
-  const actual = await vi.importActual('recharts');
-  return {
-    ...(actual as any),
-    ResponsiveContainer: ({ children }: any) => <div data-testid="recharts-container">{children}</div>,
-    BarChart: () => <div data-testid="bar-chart-mock">BarChart Mock</div>,
+  const mockData = {
+    table: 'A',
+    currency: 'dolar amerykański',
+    code: 'USD',
+    rates: [
+      { no: '1', effectiveDate: '2026-05-20', mid: 4.0 },
+      { no: '2', effectiveDate: '2026-05-21', mid: 4.1 },
+      { no: '3', effectiveDate: '2026-05-22', mid: 4.1 },
+      { no: '4', effectiveDate: '2026-05-23', mid: 3.9 },
+    ]
   };
-});
 
-const mockApiResponse = {
-  table: 'A',
-  currency: 'Test Currency',
-  code: 'TST',
-  rates: [{ no: '1', effectiveDate: '2026-05-25', mid: 4.5 }]
-};
+  it('renders default state correctly when data is null', () => {
+    render(<CurrencyColumn selectedCurrency="USD" onCurrencyChange={mockOnCurrencyChange} data={null} />);
 
-describe('Dashboard Component', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    (api.fetchRatesByDateRange as Mock).mockResolvedValue(mockApiResponse);
+    expect(screen.getByDisplayValue('USD')).toBeInTheDocument();
+
+    expect(screen.getByText('Upward sessions').nextElementSibling).toHaveTextContent('0');
+    expect(screen.getByText('No-change sessions').nextElementSibling).toHaveTextContent('0');
+    expect(screen.getByText('Downward sessions').nextElementSibling).toHaveTextContent('0');
+
+    expect(screen.getByText('Median').nextElementSibling).toHaveTextContent('-');
+    expect(screen.getByText('Mode').nextElementSibling).toHaveTextContent('-');
+    expect(screen.getByText('Standard Deviation').nextElementSibling).toHaveTextContent('-');
+    expect(screen.getByText('Coefficient of Variation').nextElementSibling).toHaveTextContent('-');
   });
 
-  it('renders initial dashboard structure correctly', async () => {
-    render(<Dashboard />);
+  it('renders calculated statistics and sessions correctly when data is provided', () => {
+    render(<CurrencyColumn selectedCurrency="USD" onCurrencyChange={mockOnCurrencyChange} data={mockData} />);
 
-    await waitFor(() => {
-      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(4);
-    });
+    expect(screen.getByText('Upward sessions').nextElementSibling).toHaveTextContent('1');
+    expect(screen.getByText('No-change sessions').nextElementSibling).toHaveTextContent('1');
+    expect(screen.getByText('Downward sessions').nextElementSibling).toHaveTextContent('1');
 
-    expect(screen.getByAltText('CAS Logo')).toBeInTheDocument();
-    expect(screen.getByText('Choose timeframe')).toBeInTheDocument();
-    expect(screen.getByText(/Quarterly changes distribution/i)).toBeInTheDocument();
+    expect(screen.getByText('Median').nextElementSibling).not.toHaveTextContent('-');
+    expect(screen.getByText('Standard Deviation').nextElementSibling).not.toHaveTextContent('-');
   });
 
-  it('toggles distribution mode between Month and Quarter', async () => {
-    render(<Dashboard />);
+  it('calls onCurrencyChange when a new currency is selected from the dropdown', () => {
+    render(<CurrencyColumn selectedCurrency="USD" onCurrencyChange={mockOnCurrencyChange} data={null} />);
 
-    await waitFor(() => {
-      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(4);
-    });
+    const select = screen.getByDisplayValue('USD');
+    fireEvent.change(select, { target: { value: 'EUR' } });
 
-    const monthButton = screen.getByText('Month');
-    const quarterButton = screen.getByText('Quarter');
-
-    fireEvent.click(monthButton);
-    await waitFor(() => {
-      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(6);
-    });
-    expect(screen.getByText(/Monthly changes distribution/i)).toBeInTheDocument();
-
-    fireEvent.click(quarterButton);
-    await waitFor(() => {
-      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(8);
-    });
-    expect(screen.getByText(/Quarterly changes distribution/i)).toBeInTheDocument();
+    expect(mockOnCurrencyChange).toHaveBeenCalledWith('EUR');
   });
 
-  it('calls fetchRatesByDateRange when timeframe is changed', async () => {
-    render(<Dashboard />);
+  it('handles "No mode" correctly without appending " PLN"', () => {
+    const noModeData = {
+      table: 'A',
+      currency: 'Euro',
+      code: 'EUR',
+      rates: [
+        { no: '1', effectiveDate: '2026-05-20', mid: 4.0 },
+        { no: '2', effectiveDate: '2026-05-21', mid: 4.1 },
+        { no: '3', effectiveDate: '2026-05-22', mid: 4.2 },
+      ]
+    };
 
-    await waitFor(() => {
-      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(4);
-    });
+    render(<CurrencyColumn selectedCurrency="EUR" onCurrencyChange={mockOnCurrencyChange} data={noModeData} />);
 
-    vi.clearAllMocks();
+    const modeValue = screen.getByText('Mode').nextElementSibling;
 
-    const timeframeSelect = screen.getByDisplayValue('Choose timeframe');
+    expect(modeValue).toHaveTextContent('No mode');
+    expect(modeValue).not.toHaveTextContent('No mode PLN');
+  });
+
+  it('appends " PLN" and "%" correctly to valid numerical stats', () => {
+    const validStatsData = {
+      table: 'A',
+      currency: 'Euro',
+      code: 'EUR',
+      rates: [
+        { no: '1', effectiveDate: '2026-05-20', mid: 4.1 },
+        { no: '2', effectiveDate: '2026-05-21', mid: 4.1 },
+        { no: '3', effectiveDate: '2026-05-22', mid: 4.5 },
+      ]
+    };
+
+    render(<CurrencyColumn selectedCurrency="EUR" onCurrencyChange={mockOnCurrencyChange} data={validStatsData} />);
+
+    expect(screen.getByText('Median').nextElementSibling?.textContent).toMatch(/PLN$/);
+    expect(screen.getByText('Mode').nextElementSibling?.textContent).toMatch(/PLN$/);
+    expect(screen.getByText('Standard Deviation').nextElementSibling?.textContent).toMatch(/PLN$/);
     
-    fireEvent.change(timeframeSelect, { target: { value: '1m' } });
-
-    await waitFor(() => {
-      expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(2);
-    });
+    expect(screen.getByText('Coefficient of Variation').nextElementSibling?.textContent).toMatch(/%$/);
   });
 });

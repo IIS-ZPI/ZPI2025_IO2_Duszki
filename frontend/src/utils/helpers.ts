@@ -1,6 +1,6 @@
 import { NBPExchangeRates } from '../api/types';
 
-// Helper function to calculate dates based on the selected timeframe
+// Subtract exact number of days as required by the specification (T - days)
 export const getDateRange = (timeframe: string) => {
   const end = new Date();
   const start = new Date();
@@ -8,18 +8,17 @@ export const getDateRange = (timeframe: string) => {
   switch(timeframe) {
     case '1w': start.setDate(end.getDate() - 7); break;
     case '2w': start.setDate(end.getDate() - 14); break;
-    case '1m': start.setMonth(end.getMonth() - 1); break;
-    case '1q': start.setMonth(end.getMonth() - 3); break;
-    case '6m': start.setMonth(end.getMonth() - 6); break;
-    case '1y': start.setFullYear(end.getFullYear() - 1); break;
-    default: start.setMonth(end.getMonth() - 1); // Default to 1 month
+    case '1m': start.setDate(end.getDate() - 30); break;
+    case '1q': start.setDate(end.getDate() - 90); break;
+    case '6m': start.setDate(end.getDate() - 180); break;
+    case '1y': start.setDate(end.getDate() - 365); break;
+    default: start.setDate(end.getDate() - 30); // Default to 1 month (30 days)
   }
 
   const formatDate = (d: Date) => d.toISOString().split('T')[0];
   return { startDate: formatDate(start), endDate: formatDate(end) };
 };
 
-// Function: Calculating DYNAMIC histogram data for ANY currency pair
 export const generateHistogramData = (data1: NBPExchangeRates | null, data2: NBPExchangeRates | null) => {
   if (!data1 || !data2 || data1.rates.length === 0 || data2.rates.length === 0) return [];
 
@@ -57,7 +56,8 @@ export const generateHistogramData = (data1: NBPExchangeRates | null, data2: NBP
     }];
   }
 
-  const numBins = 12;
+  // EQUATION 4 FROM SPECIFICATION: k = ceil(sqrt(n))
+  const numBins = Math.ceil(Math.sqrt(changes.length));
   const step = (maxChange - minChange) / numBins;
 
   const bins = Array.from({ length: numBins }, (_, i) => ({
