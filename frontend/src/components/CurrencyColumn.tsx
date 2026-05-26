@@ -39,6 +39,17 @@ export const CurrencyColumn = ({ selectedCurrency, onCurrencyChange, data }: Cur
     </svg>
   );
 
+  // Formatting logic to prevent appending units to error texts
+  const formatMode = (modeVal: string) => {
+    if (modeVal === '-' || modeVal === 'No mode' || modeVal === 'Multiple modes') return modeVal;
+    return `${modeVal} PLN`;
+  };
+
+  const formatCV = (cvVal: string) => {
+    if (cvVal === '-' || cvVal === 'Cannot calculate') return cvVal;
+    return `${cvVal}%`;
+  };
+
   return (
     <div className="space-y-4">
       {/* Large Currency Selector */}
