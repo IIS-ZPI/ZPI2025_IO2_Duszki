@@ -19,7 +19,6 @@ export const getDateRange = (timeframe: string) => {
   return { startDate: formatDate(start), endDate: formatDate(end) };
 };
 
-// Function: Calculating DYNAMIC histogram data for ANY currency pair
 export const generateHistogramData = (data1: NBPExchangeRates | null, data2: NBPExchangeRates | null) => {
   if (!data1 || !data2 || data1.rates.length === 0 || data2.rates.length === 0) return [];
 
@@ -57,7 +56,8 @@ export const generateHistogramData = (data1: NBPExchangeRates | null, data2: NBP
     }];
   }
 
-  const numBins = 12;
+  // EQUATION 4 FROM SPECIFICATION: k = ceil(sqrt(n))
+  const numBins = Math.ceil(Math.sqrt(changes.length));
   const step = (maxChange - minChange) / numBins;
 
   const bins = Array.from({ length: numBins }, (_, i) => ({
