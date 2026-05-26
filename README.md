@@ -67,7 +67,10 @@ http://localhost:5173
 
 ## 4. Location of backlogs
 
-# todo
+Backlog is maintained both in a dedicated project board 
+(visual task tracking chart) and in GitHub Issues.
+
+[Gantt chart](https://sharing.clickup.com/90121583604/g/h/2kxumezm-192/80ebfeb8dd14c8e?fbclid=IwY2xjawQ3TgNleHRuA2FlbQIxMQBzcnRjBmFwcF9pZAEwAAEenlBQNUtZ1mOh8dx0vREOUvwUWMbaSZMrsz_SS8hxSmMGePPZGVtNrd1nwrc_aem_fvWYj1p0EDYrDAG6IYq0dg)
 
 ---
 
