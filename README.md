@@ -120,4 +120,6 @@ npx vitest run
 
 ## 6. Location of testing documentation
 
+Bug reports and software repair procedures are maintained using GitHub Issues.
+
 # todo
