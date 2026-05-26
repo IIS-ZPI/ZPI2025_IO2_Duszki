@@ -7,7 +7,6 @@ import * as api from '../api/api';
 
 vi.mock('../api/api');
 
-// Mockowanie biblioteki recharts, aby uniknąć problemów z renderowaniem SVG w JSDOM
 vi.mock('recharts', async () => {
   const actual = await vi.importActual('recharts');
   return {
@@ -33,14 +32,12 @@ describe('Dashboard Component', () => {
   it('renders initial dashboard structure correctly', async () => {
     render(<Dashboard />);
 
-    // Na starcie wywołują się tylko 2 zapytania dla sekcji dolnej (topTimeframe jest puste)
     await waitFor(() => {
       expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(2);
     });
 
     expect(screen.getByAltText('CAS Logo')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Choose timeframe')).toBeInTheDocument();
-    // Domyślny widok to teraz 'Month', a tekst to "Monthly change distribution"
     expect(screen.getByText(/Monthly change distribution/i)).toBeInTheDocument();
   });
 
@@ -54,18 +51,14 @@ describe('Dashboard Component', () => {
     const monthButton = screen.getByText('Month');
     const quarterButton = screen.getByText('Quarter');
 
-    // Najpierw klikamy Quarter (ponieważ Month jest aktywne domyślnie)
     fireEvent.click(quarterButton);
     await waitFor(() => {
-      // 2 początkowe + 2 po zmianie na Quarter = 4
       expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(4);
     });
     expect(screen.getByText(/Quarterly change distribution/i)).toBeInTheDocument();
 
-    // Następnie wracamy do Month
     fireEvent.click(monthButton);
     await waitFor(() => {
-      // 4 + 2 po zmianie na Month = 6
       expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(6);
     });
     expect(screen.getByText(/Monthly change distribution/i)).toBeInTheDocument();
@@ -78,16 +71,13 @@ describe('Dashboard Component', () => {
       expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(2);
     });
 
-    // Czyścimy mocki, żeby policzyć tylko wywołania po zmianie Selecta
     vi.clearAllMocks();
 
     const timeframeSelect = screen.getByDisplayValue('Choose timeframe');
 
-    // Użytkownik wybiera z listy np. '1m'
     fireEvent.change(timeframeSelect, { target: { value: '1m' } });
 
     await waitFor(() => {
-      // Powinny polecieć 2 zapytania z górnego useEffecta
       expect(api.fetchRatesByDateRange).toHaveBeenCalledTimes(2);
     });
   });
