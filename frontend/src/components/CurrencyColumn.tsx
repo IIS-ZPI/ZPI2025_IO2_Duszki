@@ -3,8 +3,8 @@ import { StatBox } from './StatBox';
 import { calculateSessions, calculateStats } from '../utils/statistics';
 import { NBPExchangeRates } from '../api/types';
 
-// List of the most popular currencies from NBP Table A
-const AVAILABLE_CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD', 'CZK'];
+// Updated currency list according to the specification
+const AVAILABLE_CURRENCIES = ['EUR', 'USD', 'CHF', 'GBP', 'JPY', 'AUD', 'CAD', 'NOK', 'SEK', 'DKK', 'CZK', 'HUF'];
 
 interface CurrencyColumnProps {
   selectedCurrency: string;
@@ -64,13 +64,13 @@ export const CurrencyColumn = ({ selectedCurrency, onCurrencyChange, data }: Cur
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <StatBox title="Median" value={`${stats.median} PLN`} />
-        <StatBox title="Mode" value={`${stats.mode} PLN`} />
+        <StatBox title="Median" value={stats.median !== '-' ? `${stats.median} PLN` : '-'} />
+        <StatBox title="Mode" value={formatMode(stats.mode)} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <StatBox title="Standard Deviation" value={`${stats.standardDeviation} PLN`} />
-        <StatBox title="Coefficient of Variation" value={stats.coefficientOfVariation !== '-' ? `${stats.coefficientOfVariation}%` : '-'} />
+        <StatBox title="Standard Deviation" value={stats.standardDeviation !== '-' ? `${stats.standardDeviation} PLN` : '-'} />
+        <StatBox title="Coefficient of Variation" value={formatCV(stats.coefficientOfVariation)} />
       </div>
     </div>
   );
