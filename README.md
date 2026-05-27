@@ -27,11 +27,11 @@ processing, and visualization of financial data.
 - Single Page Application (SPA)
 
 ### Visualization
-- Dynamic histograms and analytical charts rendered in the browser
+- Dynamic histogram and table rendered in the browser
 
 ---
 
-## 2. Software deployment location or how to run the application
+## 2. How to run the application?
 
 ### Requirements
 - Node.js
@@ -59,9 +59,9 @@ http://localhost:5173
 
 ---
 
-## 3. Location (folder) of project documentation
+## 3. Location of project documentation
 
-# todo
+The project documentation file is located in the documentation/ directory of the project repository.
 
 ---
 
@@ -124,5 +124,4 @@ npx vitest run
 ## 6. Location of testing documentation
 
 Bug reports and software repair procedures are maintained using GitHub Issues.
-
-# todo
+This topic is described in a separate section of the documentation titled “Acceptance Test Report”.
