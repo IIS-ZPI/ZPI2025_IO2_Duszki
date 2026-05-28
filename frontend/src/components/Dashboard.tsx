@@ -1,0 +1,239 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { fetchRatesByDateRange } from '../api/api';
+import { NBPExchangeRates } from '../api/types';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import * as htmlToImage from 'html-to-image';
+import logo from '../assets/cas.png';
+
+import { CurrencyColumn } from './CurrencyColumn';
+import { getDateRange, generateHistogramData } from '../utils/helpers';
+
+export const Dashboard = () => {
+  // --- SHARED STATES ---
+  const [currency1, setCurrency1] = useState('CHF');
+  const [currency2, setCurrency2] = useState('USD');
+
+  // --- TOP SECTION STATES (Stats & Tiles) ---
+  const [topTimeframe, setTopTimeframe] = useState('');
+  const [topData1, setTopData1] = useState<NBPExchangeRates | null>(null);
+  const [topData2, setTopData2] = useState<NBPExchangeRates | null>(null);
+
+  // --- BOTTOM SECTION STATES (Histogram & Table) ---
+  const [distributionMode, setDistributionMode] = useState<'Month' | 'Quarter'>('Month');
+  const [startDate, setStartDate] = useState<string>('');
+  const [bottomData1, setBottomData1] = useState<NBPExchangeRates | null>(null);
+  const [bottomData2, setBottomData2] = useState<NBPExchangeRates | null>(null);
+
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Validation logic
+  const areCurrenciesSame = currency1 === currency2;
+
+  const isFutureEndPeriod = useMemo(() => {
+    if (!startDate) return false;
+    const start = new Date(startDate);
+    const daysToAdd = distributionMode === 'Month' ? 30 : 90;
+    start.setDate(start.getDate() + daysToAdd);
+    return start > new Date();
+  }, [startDate, distributionMode]);
+
+  const hasBottomError = areCurrenciesSame || isFutureEndPeriod;
+
+  // Fetching data specifically for the TOP section
+  useEffect(() => {
+    if (!topTimeframe) return;
+    const loadTopData = async () => {
+      const { startDate: start, endDate } = getDateRange(topTimeframe);
+
+      try {
+        const [res1, res2] = await Promise.all([
+          fetchRatesByDateRange('a', currency1, start, endDate),
+          fetchRatesByDateRange('a', currency2, start, endDate)
+        ]);
+        setTopData1(res1);
+        setTopData2(res2);
+      } catch (error) {
+        console.error("Error fetching top section data from NBP API", error);
+      }
+    };
+    loadTopData();
+  }, [topTimeframe, currency1, currency2]);
+
+  // Fetching data specifically for the BOTTOM section
+  useEffect(() => {
+    if (hasBottomError) {
+      setBottomData1(null);
+      setBottomData2(null);
+      return;
+    }
+
+    const loadBottomData = async () => {
+      const bottomTimeframe = distributionMode === 'Month' ? '1m' : '1q';
+      const { startDate: calcStart, endDate } = getDateRange(bottomTimeframe);
+      const finalStartDate = startDate || calcStart;
+
+      try {
+        const [res1, res2] = await Promise.all([
+          fetchRatesByDateRange('a', currency1, finalStartDate, endDate),
+          fetchRatesByDateRange('a', currency2, finalStartDate, endDate)
+        ]);
+        setBottomData1(res1);
+        setBottomData2(res2);
+      } catch (error) {
+        console.error("Error fetching bottom section data from NBP API", error);
+      }
+    };
+    loadBottomData();
+  }, [distributionMode, startDate, currency1, currency2, hasBottomError]);
+
+  const histogramData = useMemo(() => generateHistogramData(bottomData1, bottomData2), [bottomData1, bottomData2]);
+
+  const handleSaveCSV = () => {
+    let csvContent = "data:text/csv;charset=utf-8,Start of range (inclusive),End of range (exclusive),Number of changes\n";
+    histogramData.forEach(row => {
+      csvContent += `${row.min},${row.max},${row.uv}\n`;
+    });
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${distributionMode.toLowerCase()}ly_distribution_${currency1}_${currency2}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleSavePNG = async () => {
+    if (chartRef.current) {
+      try {
+        const dataUrl = await htmlToImage.toPng(chartRef.current, { backgroundColor: '#ffffff' });
+        const link = document.createElement('a');
+        link.download = `${distributionMode.toLowerCase()}ly_chart_${currency1}_${currency2}.png`;
+        link.href = dataUrl;
+        link.click();
+      } catch (error) {
+        console.error('Error generating image:', error);
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f3f4f6] font-sans text-gray-800">
+      <header className="w-full bg-[#217d4e] text-white py-4 px-8 shadow-md border-b-4 border-[#175c38]">
+        <div className="flex items-center">
+          <img src={logo} alt="CAS Logo" className="h-14 w-auto object-contain" />
+        </div>
+      </header>
+
+      <main className="p-8 w-full">
+        <div className="relative bg-white border border-gray-200 rounded-lg shadow-sm mb-6 mt-2">
+           <select
+              value={topTimeframe}
+              onChange={(e) => setTopTimeframe(e.target.value)}
+              className={`w-full bg-transparent text-sm py-4 px-4 focus:outline-none appearance-none cursor-pointer ${topTimeframe === '' ? 'text-gray-400' : 'text-gray-700'}`}
+              style={{ textAlignLast: 'center' }}
+            >
+              <option value="" disabled hidden>Choose timeframe</option>
+              <option value="1w">Last 1 week</option>
+              <option value="2w">Last 2 weeks</option>
+              <option value="1m">Last 1 month</option>
+              <option value="1q">Last 1 quarter</option>
+              <option value="6m">Last 6 months</option>
+              <option value="1y">Last 1 year</option>
+           </select>
+           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" /></svg>
+           </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <CurrencyColumn selectedCurrency={currency1} onCurrencyChange={setCurrency1} data={topData1} />
+          <CurrencyColumn selectedCurrency={currency2} onCurrencyChange={setCurrency2} data={topData2} />
+        </div>
+
+        <section className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-800">{distributionMode === 'Month' ? 'Monthly change distribution' : 'Quarterly change distribution'} {currency1} - {currency2}</h3>
+              <p className="text-sm text-gray-500">Histogram of the frequency of value changes within a given range</p>
+            </div>
+            <div className="flex flex-wrap gap-4 items-end">
+               <div className="flex border border-gray-200 rounded-md overflow-hidden bg-white h-[34px]">
+                  <button onClick={() => { setDistributionMode('Month'); setStartDate(''); }} className={`px-4 text-sm font-medium transition-colors ${distributionMode === 'Month' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}`}>Month</button>
+                  <button onClick={() => { setDistributionMode('Quarter'); setStartDate(''); }} className={`px-4 text-sm font-medium border-l border-gray-200 transition-colors ${distributionMode === 'Quarter' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}`}>Quarter</button>
+               </div>
+               <div className="flex flex-col">
+                  <span className="text-[10px] uppercase text-gray-500 mb-1 ml-1 tracking-wider">Start date</span>
+                  <div className="border border-gray-200 rounded-md px-2 py-1.5 flex items-center bg-white h-[34px]">
+                     <input type="date" value={startDate} max={todayStr} onChange={(e) => setStartDate(e.target.value)} className="text-sm text-gray-600 bg-transparent outline-none cursor-pointer w-full px-1" />
+                  </div>
+               </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col xl:flex-row gap-8">
+            <div className="flex-1">
+              <div ref={chartRef} className="h-80 w-full bg-white pt-4">
+                {areCurrenciesSame ? (
+                   <div className="flex items-center justify-center h-full text-red-500 font-medium text-center px-4">Error: Two identical currencies selected. Calculations cannot be performed.</div>
+                ) : isFutureEndPeriod ? (
+                   <div className="flex items-center justify-center h-full text-red-500 font-medium text-center px-4">Error: Selected period extends into the future. Calculations cannot be performed.</div>
+                ) : histogramData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={histogramData}>
+                      <XAxis dataKey="label" fontSize={12} angle={-45} textAnchor="end" height={60} interval={0} />
+                      <YAxis fontSize={12} />
+                      <Tooltip cursor={{fill: '#f3f4f6'}} />
+                      <Bar dataKey="uv" fill="#357850" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400">Not enough data to generate the chart</div>
+                )}
+              </div>
+              <div className="flex justify-end mt-2">
+                <button onClick={handleSavePNG} className="text-sm font-bold text-gray-500 hover:text-gray-800 inline-flex items-center gap-1.5 transition-colors pr-1" disabled={histogramData.length === 0 || hasBottomError}>
+                  Save <svg className="w-5 h-5 text-[#357850] ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="w-full xl:w-auto overflow-x-auto">
+               <div className="border border-gray-200 rounded-lg overflow-y-auto max-h-[350px] bg-white relative min-w-[500px]">
+                 <table className="w-full text-sm text-center">
+                   <thead className="sticky top-0 bg-white z-10 shadow-sm">
+                     <tr className="border-b border-gray-200">
+                       <th className="py-3 px-4 font-semibold text-gray-700">Start of range (inclusive)</th>
+                       <th className="py-3 px-4 font-semibold text-gray-700">End of range (exclusive)</th>
+                       <th className="py-3 px-4 font-semibold text-gray-700">Number of changes</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-gray-100">
+                      {!hasBottomError && histogramData.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                          <td className="py-2.5 px-4 text-gray-600">{row.min}</td>
+                          <td className="py-2.5 px-4 text-gray-600">{row.max}</td>
+                          <td className="py-2.5 px-4 text-gray-800 font-medium">{row.uv}</td>
+                        </tr>
+                      ))}
+                      {hasBottomError && (
+                         <tr>
+                           <td colSpan={3} className="py-8 text-gray-400">- No data to display -</td>
+                         </tr>
+                      )}
+                   </tbody>
+                 </table>
+               </div>
+               <div className="flex justify-end mt-3">
+                <button onClick={handleSaveCSV} className="text-sm font-bold text-gray-500 hover:text-gray-800 inline-flex items-center gap-1.5 transition-colors pr-1" disabled={histogramData.length === 0 || hasBottomError}>
+                  Save <svg className="w-5 h-5 text-[#357850] ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+};
